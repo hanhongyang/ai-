@@ -1,0 +1,36 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: ai-gateway
+  datasource:
+    url: jdbc:mysql://localhost:3306/ai_gateway?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    banner: false
+
+dingtalk:
+  stream:
+    client-id: ${DINGTALK_CLIENT_ID:}
+    client-secret: ${DINGTALK_CLIENT_SECRET:}
+  robot:
+    max-question-length: 500
+    enable-at-check: true
+    fallback-answer: "抱歉，AI 助手暂时无法回答，请稍后再试。"
+
+fastgpt:
+  base-url: ${FASTGPT_BASE_URL:https://your-fastgpt-domain}
+  api-key: ${FASTGPT_API_KEY:}
+  timeout-seconds: 30
+
+logging:
+  level:
+    root: info
+    com.example.aigateway: debug
