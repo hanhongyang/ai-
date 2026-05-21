@@ -37,16 +37,16 @@ public class DingTalkMessageServiceImpl implements DingTalkMessageService {
 
     @Override
     public void processMessage(DingTalkBotMessageDTO message, String rawJson) {
-        AiChatLog log = new AiChatLog();
-        log.setSource("dingtalk_stream");
-        log.setMsgId(message.getMsgId());
-        log.setConversationId(message.getConversationId());
-        log.setConversationTitle(message.getConversationTitle());
-        log.setSenderStaffId(message.getSenderStaffId());
-        log.setSenderNick(message.getSenderNick());
-        log.setSenderId(message.getSenderId());
-        log.setRawRequest(rawJson);
-        log.setCreatedAt(LocalDateTime.now());
+        AiChatLog chatLog = new AiChatLog();
+        chatLog.setSource("dingtalk_stream");
+        chatLog.setMsgId(message.getMsgId());
+        chatLog.setConversationId(message.getConversationId());
+        chatLog.setConversationTitle(message.getConversationTitle());
+        chatLog.setSenderStaffId(message.getSenderStaffId());
+        chatLog.setSenderNick(message.getSenderNick());
+        chatLog.setSenderId(message.getSenderId());
+        chatLog.setRawRequest(rawJson);
+        chatLog.setCreatedAt(LocalDateTime.now());
 
         try {
             // 只处理文本消息
@@ -69,7 +69,7 @@ public class DingTalkMessageServiceImpl implements DingTalkMessageService {
 
             // 清洗问题
             String question = TextUtils.cleanQuestion(rawQuestion);
-            log.setQuestion(question);
+            chatLog.setQuestion(question);
 
             log.info("收到钉钉消息: msgId={}, conversationId={}, senderNick={}, question={}",
                     message.getMsgId(), message.getConversationId(), message.getSenderNick(), question);
@@ -77,9 +77,9 @@ public class DingTalkMessageServiceImpl implements DingTalkMessageService {
             if (TextUtils.isBlank(question)) {
                 String reply = "请直接输入您想咨询的问题。";
                 dingTalkReplyService.replyText(message.getSessionWebhook(), reply);
-                log.setAnswer(reply);
-                log.setSuccess(1);
-                chatLogService.saveLog(log);
+                chatLog.setAnswer(reply);
+                chatLog.setSuccess(1);
+                chatLogService.saveLog(chatLog);
                 return;
             }
 
@@ -87,9 +87,9 @@ public class DingTalkMessageServiceImpl implements DingTalkMessageService {
             if (question.length() > properties.getRobot().getMaxQuestionLength()) {
                 String reply = "问题太长，请简化后再提问。";
                 dingTalkReplyService.replyText(message.getSessionWebhook(), reply);
-                log.setAnswer(reply);
-                log.setSuccess(1);
-                chatLogService.saveLog(log);
+                chatLog.setAnswer(reply);
+                chatLog.setSuccess(1);
+                chatLogService.saveLog(chatLog);
                 return;
             }
 
@@ -109,24 +109,24 @@ public class DingTalkMessageServiceImpl implements DingTalkMessageService {
                         .build();
             }
 
-            log.setRawResponse(answerResult.getRawResponse());
+            chatLog.setRawResponse(answerResult.getRawResponse());
 
             if (answerResult.isSuccess()) {
                 String answer = answerResult.getAnswer();
                 dingTalkReplyService.replyText(message.getSessionWebhook(), answer);
-                log.setAnswer(answer);
-                log.setSuccess(1);
+                chatLog.setAnswer(answer);
+                chatLog.setSuccess(1);
             } else {
                 String fallback = properties.getRobot().getFallbackAnswer();
                 dingTalkReplyService.replyText(message.getSessionWebhook(), fallback);
-                log.setAnswer(fallback);
-                log.setSuccess(0);
-                log.setErrorMessage(answerResult.getErrorMessage());
+                chatLog.setAnswer(fallback);
+                chatLog.setSuccess(0);
+                chatLog.setErrorMessage(answerResult.getErrorMessage());
             }
         } catch (Exception e) {
             log.error("消息处理异常: {}", e.getMessage(), e);
-            log.setSuccess(0);
-            log.setErrorMessage("消息处理异常: " + e.getMessage());
+            chatLog.setSuccess(0);
+            chatLog.setErrorMessage("消息处理异常: " + e.getMessage());
             try {
                 dingTalkReplyService.replyText(message.getSessionWebhook(), properties.getRobot().getFallbackAnswer());
             } catch (Exception ignored) {
@@ -135,6 +135,6 @@ public class DingTalkMessageServiceImpl implements DingTalkMessageService {
         }
 
         // 保存日志
-        chatLogService.saveLog(log);
+        chatLogService.saveLog(chatLog);
     }
 }

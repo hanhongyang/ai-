@@ -1,6 +1,6 @@
 package com.example.aigateway.listener;
 
-import com.dingtalk.open.app.api.GenericEventListener;
+import com.dingtalk.open.app.api.callback.OpenDingTalkCallbackListener;
 import com.dingtalk.open.app.api.models.bot.ChatbotMessage;
 import com.example.aigateway.dto.DingTalkBotMessageDTO;
 import com.example.aigateway.service.DingTalkMessageService;
@@ -13,13 +13,10 @@ import org.springframework.stereotype.Component;
  * <p>
  * 通过注册回调 /v1.0/im/bot/messages/get 接收机器人消息。
  * 所有消息处理逻辑委托给 DingTalkMessageService。
- * <p>
- * 事件处理成功后返回 SUCCESS ack；处理失败但不希望钉钉重复推送时也返回 SUCCESS；
- * 只有系统级异常才返回 LATER 或 RETRY。
  */
 @Slf4j
 @Component
-public class DingTalkStreamMessageListener implements GenericEventListener<ChatbotMessage> {
+public class DingTalkStreamMessageListener implements OpenDingTalkCallbackListener<ChatbotMessage, Void> {
 
     private final DingTalkMessageService dingTalkMessageService;
 
@@ -28,7 +25,7 @@ public class DingTalkStreamMessageListener implements GenericEventListener<Chatb
     }
 
     @Override
-    public void onEvent(ChatbotMessage event) {
+    public Void execute(ChatbotMessage event) {
         String rawJson = null;
         try {
             // 将事件对象序列化为 JSON 用于日志记录
@@ -40,7 +37,7 @@ public class DingTalkStreamMessageListener implements GenericEventListener<Chatb
             DingTalkBotMessageDTO message = parseMessage(event);
             if (message == null) {
                 log.warn("消息解析为空，跳过处理");
-                return;
+                return null;
             }
 
             dingTalkMessageService.processMessage(message, rawJson);
@@ -49,6 +46,8 @@ public class DingTalkStreamMessageListener implements GenericEventListener<Chatb
         } catch (Exception e) {
             log.error("消息监听器异常: {}", e.getMessage(), e);
         }
+        // 处理成功返回 null，SDK 内部会自动回复 SUCCESS Ack 确认接收
+        return null;
     }
 
     /**
@@ -71,7 +70,7 @@ public class DingTalkStreamMessageListener implements GenericEventListener<Chatb
             dto.setChatbotUserId(getSafeString(event.getChatbotUserId()));
             dto.setSessionWebhook(getSafeString(event.getSessionWebhook()));
             dto.setMsgtype(getSafeString(event.getMsgtype()));
-            dto.setIsInAtList(getSafeString(event.getIsInAtList()));
+            dto.setIsInAtList(getSafeString(event.getInAtList()));
 
             // 解析文本内容
             if (event.getText() != null) {

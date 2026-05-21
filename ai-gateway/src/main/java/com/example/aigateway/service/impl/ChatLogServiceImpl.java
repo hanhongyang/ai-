@@ -12,10 +12,10 @@ import org.springframework.stereotype.Service;
 public class ChatLogServiceImpl extends ServiceImpl<AiChatLogMapper, AiChatLog> implements ChatLogService {
 
     @Override
-    public void saveLog(AiChatLog log) {
+    public void saveLog(AiChatLog chatLog) {
         try {
-            save(log);
-            log.debug("问答日志保存成功, msgId={}", log.getMsgId());
+            save(chatLog);
+            log.debug("问答日志保存成功, msgId={}", chatLog.getMsgId());
         } catch (Exception e) {
             log.error("问答日志保存失败: {}", e.getMessage(), e);
         }

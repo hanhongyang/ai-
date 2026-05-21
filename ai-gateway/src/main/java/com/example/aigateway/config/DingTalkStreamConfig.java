@@ -1,6 +1,6 @@
 package com.example.aigateway.config;
 
-import com.dingtalk.open.app.api.OpenDingTalkStreamClient;
+import com.dingtalk.open.app.api.OpenDingTalkClient;
 import com.dingtalk.open.app.api.OpenDingTalkStreamClientBuilder;
 import com.dingtalk.open.app.api.security.AuthClientCredential;
 import com.example.aigateway.listener.DingTalkStreamMessageListener;
@@ -14,10 +14,7 @@ import org.springframework.context.annotation.Configuration;
  *
  * 服务启动后，通过 clientId/clientSecret 主动连接钉钉，
  * 无需公网回调 URL。
-
  * 注意：钉钉机器人接收消息的回调名称固定为 /v1.0/im/bot/messages/get。
- * 如果 SDK 支持按 topic/callbackName 注册监听器，应监听该机器人消息回调；
- * 如果 SDK 只支持通用事件监听，则在监听器中根据事件类型或消息结构判断是否为机器人消息。
  */
 @Slf4j
 @Configuration
@@ -26,7 +23,8 @@ public class DingTalkStreamConfig {
     private final AiGatewayProperties properties;
     private final DingTalkStreamMessageListener messageListener;
 
-    private OpenDingTalkStreamClient client;
+    // 【修改点】这里改为 OpenDingTalkClient 接口
+    private OpenDingTalkClient client;
 
     public DingTalkStreamConfig(AiGatewayProperties properties,
                                 DingTalkStreamMessageListener messageListener) {
